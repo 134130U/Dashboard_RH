@@ -5,7 +5,7 @@ from dash import Dash, html,dcc, page_container
 import dash_bootstrap_components as dbc
 import dash
 
-data = pd.read_csv('HR data.csv')
+data = pd.read_csv('Data/RH data.csv')
 
 # import pages
 app = Dash(

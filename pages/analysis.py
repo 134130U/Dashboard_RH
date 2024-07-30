@@ -10,7 +10,7 @@ from plotly.subplots import make_subplots
 global data
 
 dash.register_page(__name__, name="analysis",path="/analysis", order=1)
-data = pd.read_csv('HR data.csv')
+data = pd.read_csv('Data/RH data.csv')
 data.drop(columns=['-2','0'],axis=1,inplace=True)
 data['depart'] = data['Attrition'].apply(lambda t: 1 if t=='Yes' else 0)
 
@@ -129,7 +129,7 @@ layout = dbc.Container(
 )
 
 def update(val,N):
-    data = pd.read_csv('HR data.csv')
+    data = pd.read_csv('Data/RH data.csv')
     data.drop(columns=['-2', '0'], axis=1, inplace=True)
     data['depart'] = data['Attrition'].apply(lambda t: 1 if t == 'Yes' else 0)
     data['group'] = age_group(10)

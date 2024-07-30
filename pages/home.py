@@ -15,7 +15,7 @@ card_icon = {
     "fontSize": 80,
     "margin": "auto",
 }
-data = pd.read_csv('HR data.csv')
+data = pd.read_csv('Data/RH data.csv')
 
 updateTime = (
     f"Last Update on {pd.to_datetime(pd.Timestamp.today()).strftime('%Y-%m-%d')}"
