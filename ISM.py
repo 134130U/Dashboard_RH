@@ -56,7 +56,6 @@ bar2.update_layout(plot_bgcolor='rgba(0,0,0,0)')
 list_age = sorted(data['CF_age band'].unique().tolist())
 list_age.insert(0,list_age.pop(4))
 plots = make_subplots(rows=1,cols=len(list_age),specs=[[{'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}]])
-plots = make_subplots(rows=1,cols=len(list_age),specs=[[{'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}]])
 for i,ag in enumerate(list_age):
     f = px.pie(data[data['CF_age band']==ag],values='depart',names='Gender', labels='depart',hole=0.5,title='Babou')
     for tt in f.data:
@@ -103,13 +102,13 @@ app.layout = html.Div([
 
     ,
     dbc.Row([
-        dbc.Col(id='pie',children=[dcc.Graph(figure=fig_pie)], width={'size':3}),
-        dbc.Col(id='bar',children=[dcc.Graph(figure=bar_fig)], width={'size':4}),
-        dbc.Col(id='heat',children=[dcc.Graph(figure=heatmap)], width={'size':4})
+        dbc.Col(children=[dcc.Graph(id='pie',figure=fig_pie)], width={'size':3}),
+        dbc.Col(children=[dcc.Graph(id='bar',figure=bar_fig)], width={'size':4}),
+        dbc.Col(children=[dcc.Graph(id='heat',figure=heatmap)], width={'size':4})
     ]),
     dbc.Row([
-        dbc.Col(id='bar2',children=[dcc.Graph(figure=bar2)], width={'size':4}),
-        dbc.Col(id='plots',children=[dcc.Graph(figure=plots)], width={'size':8}),
+        dbc.Col(children=[dcc.Graph(id='bar2',figure=bar2)], width={'size':4}),
+        dbc.Col(children=[dcc.Graph(id='plots',figure=plots)], width={'size':8}),
     ])
 
 ])
@@ -145,6 +144,58 @@ def update(dep):
 
 
     return card1, card2,card3,card4,card5
+
+@callback(
+    [Output('pie','figure'),
+        Output('bar','figure'),
+        Output('heat','figure'),
+        Output('bar2', 'figure'),
+        Output('plots', 'figure'),],
+        Input('edu','value')
+        # Input('dep', 'value')
+)
+
+def update_graph(ed):
+    df = data.copy()
+    if ed:
+        df = data[data["Education Field"]==ed]
+    dep_dep = df.groupby(['Department'])["depart"].sum().reset_index()
+    fig_pie = px.pie(dep_dep, names='Department', values='depart', title="Repartition des employes par Departement")
+
+    df_ag = df.groupby('tranche_age').sum()['depart'].reset_index()
+    bar_fig = px.bar(df_ag, x='tranche_age', y='depart', title="Nombre de departs par tranche d'age")
+    bar_fig.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+
+    tableau = pd.pivot_table(df, values='Employee Count', index='Job Role', columns="Job Satisfaction", aggfunc='sum')
+    heatmap = px.imshow(tableau, color_continuous_scale=px.colors.sequential.Blues_r, text_auto=True,
+                        title="Nombre d'employes par Roles et Satisfaction")
+    heatmap.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+
+    dep_field = df.groupby('Education Field')['depart'].sum().reset_index()
+    bar2 = px.bar(dep_field, y="Education Field", x="depart", text_auto=True, title="Nombre de departs par fillière")
+    bar2.update_layout(plot_bgcolor='rgba(0,0,0,0)')
+
+    plots = make_subplots(rows=1, cols=len(list_age), specs=[
+        [{'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}, {'type': 'domain'}]])
+    for i, ag in enumerate(list_age):
+        f = px.pie(df[df['CF_age band'] == ag], values='depart', names='Gender', labels='depart', hole=0.5,
+                   title='Babou')
+        for tt in f.data:
+            plots.add_trace(tt, row=1, col=(i + 1))
+        plots.add_annotation(
+            dict(text=ag, x=(2.05 * i + 1) / 10 - 0.01, y=-0.08, font_size=20, showarrow=False, xref='paper',
+                 yref='paper', xanchor='center', yanchor='middle'))
+        plots.add_annotation(
+            dict(text=f"{df[df['CF_age band'] == ag].shape[0]}", x=(2.05 * i + 1) / 10 - 0.01, y=0.5, font_size=35,
+                 showarrow=False, xref='paper', yref='paper', xanchor='center', yanchor='middle', ))
+    plots.update_layout(plot_bgcolor='rgba(0,0,0,0)',  # Set plot background color
+                        paper_bgcolor='rgba(0,0,0,0)',
+                        title='Taux de depart par sex et par tranche d\'age')
+    return fig_pie, bar_fig, heatmap, bar2, plots
+
+
+
+
 
 if __name__ == '__main__':
     app.run(debug=True, port=8786)
